@@ -1,0 +1,14 @@
+Package: bonuslab
+Type: Package
+Title: Iimplementation of ridgereg with QR decompastion and visualizing airports delays
+Version: 0.1.0
+Author: Group 15
+Maintainer: Muhaiminul Islam and Hirbod Gholamnia <muhis097@student.liu.se>
+Description: In this R package we wrote the code for a multiple regression model. The function is called
+    linreg() and ridgereg, along with a function to visualize mean airport delays
+    and have the two arguments formula and data.
+License: GPL-3
+Imports: methods, ggplot2, gridExtra, nycflights13, dplyr, MASS
+Encoding: UTF-8
+LazyData: true
+RoxygenNote: 7.2.1
