@@ -119,8 +119,8 @@ Ridgereg_model$predict <- function(modelFit, newdata, preProc = NULL, submodels 
 
 
 ```{r,eval=FALSE}
-library(MASS)
-fitControl <- caret::trainControl(method = "cv",
+
+fitControl <- trainControl(method = "cv",
                                     number = 10)
  lambdaGrid <- expand.grid(lambda = c(0,.01,.02,.03,.04))
   Ridgereg_model <- caret::train(crim~.,
