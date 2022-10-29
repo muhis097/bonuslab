@@ -1,0 +1,149 @@
+---
+title: "ridgereg"
+author: "Muhaiminul Islam and Hirbod"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{ridgereg}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r, include = FALSE}
+library(bonuslab)
+library(mlbench)
+library(caret)
+library(tidyverse)
+data("BostonHousing")
+
+
+```
+In this task we will show the example fo how to use ridgereg function from this package following the steps given in this assignment:
+
+
+# 1. Creating testing and traning datasets using caret package
+
+We will divide the data set taking 75% data for the training and 25% data for testing.
+
+```{r}
+
+names(BostonHousing)
+
+data= createDataPartition(BostonHousing$age, 
+                          p= .75,
+                          list= FALSE)
+
+training= BostonHousing[data, ]
+testing= BostonHousing[-data, ]
+
+```
+
+# 2. Fitting models
+
+Simple linear regression model fitted on training data
+
+
+
+```{r}
+
+a <- trainControl(method = "CV")
+
+lm_model= train(crim~.,
+                data= training,
+                method= "lm",
+                trControl= a)
+
+
+print(lm_model)
+
+```
+
+linear regression model with forward selection of covariates on the training dataset.
+
+
+```{r}
+
+a <- expand.grid(nvmax=1:(ncol(training)-1))
+
+lm_model= train(crim~.,
+                data= training,
+                method= "leapForward",
+                tuneGrid= a)
+
+
+print(lm_model)
+
+
+```
+
+
+# 3. Performance evaluation
+
+
+We can see that lm method provides low RMSE and MAE compared to the leapForward method wchich indicates smaller errors, and it also has higher rsquared value which indicate that it is a better model. 
+
+
+# 4. Fittin a ridge regression model using ridgereg() function to the training dataset for different values of λ.
+
+
+
+```{r}
+Ridgereg_model <- list(
+    type = c("Regression"),
+    library = "linreg",
+    loop = NULL,
+    prob = NULL)
+Ridgereg_model$parameters <- data.frame(parameter = "lambda",class = "numeric", label = "lambda")
+Ridgereg_model$grid <- function (x, y,len = NULL, search = "grid"){
+    data.frame(lambda=seq(0,2,by=0.25))
+}
+Ridgereg_model$fit <- function (x, y, wts, param, lev, last, classProbs, ...){
+    dat <- if (is.data.frame(x))
+        x
+    else
+        as.data.frame(x)
+    dat$.outcome <- y
+    
+    output <-
+        ridgereg$new(.outcome ~ ., data = dat, lambda = param$lambda, ...)
+    
+    output
+}
+Ridgereg_model$predict <- function(modelFit, newdata, preProc = NULL, submodels = NULL){
+    if (!is.data.frame(newdata))
+        newdata <- as.data.frame(newdata)
+    modelFit$predict(newdata)
+}
+```
+
+# 5. Find the best hyperparameter value for λ using 10-fold cross-validation on the training set
+
+
+```{r,eval=FALSE}
+library(MASS)
+fitControl <- caret::trainControl(method = "cv",
+                                    number = 10)
+ lambdaGrid <- expand.grid(lambda = c(0,.01,.02,.03,.04))
+  Ridgereg_model <- caret::train(crim~.,
+                        data = training,
+                        method='ridge',
+                        trControl = fitControl,
+                        tuneGrid = lambdaGrid,
+                        preProcess=c('center', 'scale')
+  )
+  predict(Ridgereg_model$finalModel, type='coef', mode='norm')$coefficients[13,]
+  ridge.pred <- predict(Ridgereg_model, testing)
+  avgErrror<-2*sqrt(mean(ridge.pred - testing$crim)^2)
+  
+
+print(Ridgereg_model)
+
+```
+
+
+The best hyper parameter value for lambda is 0.04
+
+
+
+# 6. Evaluate the performance of all three models on the test dataset.
+
+We can observe that ridgeregression is giving the best value here compared to the previous two models. Hence we conclude that it is the best model for the test dateset. 
